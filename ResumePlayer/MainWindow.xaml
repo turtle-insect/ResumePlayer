@@ -6,9 +6,10 @@
         xmlns:local="clr-namespace:ResumePlayer"
         mc:Ignorable="d"
 		WindowStartupLocation="CenterScreen"
-		Loaded="Window_Loaded" Closed="Window_Closed"
 		AllowDrop="True"
+		Loaded="Window_Loaded" Closed="Window_Closed"
 		Drop="Window_Drop"
+		PreviewKeyDown="Window_PreviewKeyDown"
         Title="Resume Player" Height="300" Width="500">
 	<Window.DataContext>
 		<local:ViewModel/>
@@ -24,33 +25,24 @@
 			<Label Content="Volume"/>
 			<Slider Minimum="0" Maximum="1" SmallChange="0.01" Value="{Binding Volume}" Width="150"/>
 		</StatusBar>
-		<Grid>
-			<Grid.RowDefinitions>
-				<RowDefinition/>
-				<RowDefinition Height="50"/>
-			</Grid.RowDefinitions>
-			<ListBox ItemsSource="{Binding Playlist.Items}"
-					 SelectedIndex="{Binding Playlist.SelectIndex}"
-					 HorizontalContentAlignment="Stretch">
-				<ListBox.ItemTemplate>
-					<DataTemplate>
-						<Label Content="{Binding FileName}">
-							<Label.InputBindings>
-								<MouseBinding MouseAction="LeftDoubleClick"
-											  Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:MainWindow}, Path=DataContext.PlayAudioCommand}"/>
-							</Label.InputBindings>
-						</Label>
-					</DataTemplate>
-				</ListBox.ItemTemplate>
-			</ListBox>
-			<Grid Grid.Row="1">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition/>
-					<ColumnDefinition/>
-				</Grid.ColumnDefinitions>
-				<Button Content="▶️" Command="{Binding PlayAudioCommand}"/>
-				<Button Grid.Column="1" Content="⏸" Command="{Binding PauseAudioCommand}"/>
-			</Grid>
-		</Grid>
+		<Button DockPanel.Dock="Bottom" Height="50" Command="{Binding ChangePlayerStatusCommand}">
+			<Viewbox Stretch="Uniform">
+				<Label Content="⏯"/>
+			</Viewbox>
+		</Button>
+		<ListBox ItemsSource="{Binding Playlist.Items}"
+		 SelectedIndex="{Binding Playlist.SelectIndex}"
+		 HorizontalContentAlignment="Stretch">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<Label Content="{Binding FileName}">
+						<Label.InputBindings>
+							<MouseBinding MouseAction="LeftDoubleClick"
+								  Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:MainWindow}, Path=DataContext.ChangePlayerStatusCommand}"/>
+						</Label.InputBindings>
+					</Label>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
 	</DockPanel>
 </Window>

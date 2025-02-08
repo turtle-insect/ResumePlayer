@@ -10,8 +10,7 @@ namespace ResumePlayer
 	{
 		public ICommand AppendPlaylistCommand { get; }
 		public ICommand ClearPlaylistCommand { get; }
-		public ICommand PlayAudioCommand { get; }
-		public ICommand PauseAudioCommand { get; }
+		public ICommand ChangePlayerStatusCommand { get; }
 
 		public PlayList Playlist { get; set; } = new PlayList();
 
@@ -28,8 +27,7 @@ namespace ResumePlayer
 		{
 			AppendPlaylistCommand = new ActionCommand(AppendPlaylist);
 			ClearPlaylistCommand = new ActionCommand(ClearPlaylist);
-			PlayAudioCommand = new ActionCommand(PlayAudio);
-			PauseAudioCommand = new ActionCommand(PauseAudio);
+			ChangePlayerStatusCommand = new ActionCommand(ChangePlayerStatus);
 		}
 
 		public void Load()
@@ -42,7 +40,7 @@ namespace ResumePlayer
 
 		public void Save()
 		{
-			PauseAudio(null);
+			PauseAudio();
 			System.IO.File.WriteAllText("config", Playlist.Save());
 		}
 
@@ -82,9 +80,15 @@ namespace ResumePlayer
 			Playlist.Clear();
 		}
 
-		private void PlayAudio(Object? objs)
+		public void ChangePlayerStatus(Object? objs)
 		{
-			PauseAudio(null);
+			if (mPlayer.PlaybackState == NAudio.Wave.PlaybackState.Playing) PauseAudio();
+			else PlayAudio();
+		}
+
+		private void PlayAudio()
+		{
+			PauseAudio();
 
 			var audio = Playlist.Play();
 			if (audio == null) return;
@@ -95,13 +99,13 @@ namespace ResumePlayer
 			mPlayer.Play();
 		}
 
-		private void PauseAudio(Object? objs)
+		private void PauseAudio()
 		{
-			if(mPlayer.PlaybackState == NAudio.Wave.PlaybackState.Playing)
-			{
-				mPlayer.Pause();
-				Playlist.Pause(mReader?.Position ?? 0);
-			}
+			if (mPlayer.PlaybackState != NAudio.Wave.PlaybackState.Playing) return;
+
+			mPlayer.Pause();
+			Playlist.Pause(mReader?.Position ?? 0);
+
 		}
 	}
 }
