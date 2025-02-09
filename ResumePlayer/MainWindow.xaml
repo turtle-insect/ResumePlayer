@@ -23,9 +23,12 @@
 		</Menu>
 		<StatusBar DockPanel.Dock="Top">
 			<Label Content="Volume"/>
-			<Slider Minimum="0" Maximum="1" SmallChange="0.01" Value="{Binding Volume}" Width="150"/>
+			<Slider Grid.Column="1" Minimum="0" Maximum="1" SmallChange="0.01" Value="{Binding Volume}" Width="150"/>
+			<Label Grid.Row="1" Content="Position"/>
+			<Slider Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="{Binding TotalPosition}" Value="{Binding CurrentPosition}" Width="150"/>
 		</StatusBar>
-		<Button DockPanel.Dock="Bottom" Height="50" Command="{Binding ChangePlayerStatusCommand}">
+		<Button DockPanel.Dock="Bottom" Height="50" Focusable="False"
+				Command="{Binding ChangePlayerStatusCommand}">
 			<Viewbox Stretch="Uniform">
 				<Label Content="⏯"/>
 			</Viewbox>

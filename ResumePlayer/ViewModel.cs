@@ -6,15 +6,18 @@ using System.Windows.Input;
 
 namespace ResumePlayer
 {
-	internal class ViewModel
+	internal class ViewModel : INotifyPropertyChanged
 	{
+		public event PropertyChangedEventHandler? PropertyChanged;
+
 		public ICommand AppendPlaylistCommand { get; }
 		public ICommand ClearPlaylistCommand { get; }
 		public ICommand ChangePlayerStatusCommand { get; }
 
 		public PlayList Playlist { get; set; } = new PlayList();
 
-		private NAudio.Wave.WaveOut mPlayer = new NAudio.Wave.WaveOut();
+		private System.Windows.Threading.DispatcherTimer mTimer = new();
+		private NAudio.Wave.WaveOut mPlayer = new();
 		private NAudio.Wave.AudioFileReader? mReader;
 
 		public float Volume
@@ -23,11 +26,45 @@ namespace ResumePlayer
 			set => mPlayer.Volume = value;
 		}
 
+		private long mTotalPosition;
+		public long TotalPosition
+		{
+			get => mTotalPosition;
+			private set
+			{
+				mTotalPosition = value;
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TotalPosition)));
+			}
+		}
+
+		private long mCurrentPosition;
+		public long CurrentPosition
+		{
+			get => mCurrentPosition;
+			set
+			{
+				if (mReader != null)
+				{
+					mReader.CurrentTime = new TimeSpan(value);
+				}
+				mCurrentPosition = value;
+				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentPosition)));
+			}
+		}
+
 		public ViewModel()
 		{
 			AppendPlaylistCommand = new ActionCommand(AppendPlaylist);
 			ClearPlaylistCommand = new ActionCommand(ClearPlaylist);
 			ChangePlayerStatusCommand = new ActionCommand(ChangePlayerStatus);
+
+			mTimer.Interval = new TimeSpan(0, 0, 1);
+			mTimer.Tick += MTimer_Tick;
+		}
+
+		private void MTimer_Tick(object? sender, EventArgs e)
+		{
+			CurrentPosition = mReader?.CurrentTime.Ticks ?? 0;
 		}
 
 		public void Load()
@@ -36,10 +73,12 @@ namespace ResumePlayer
 
 			String[] lines = System.IO.File.ReadAllLines("config");
 			Playlist.Load(lines);
+			mTimer.Start();
 		}
 
 		public void Save()
 		{
+			mTimer.Stop();
 			PauseAudio();
 			System.IO.File.WriteAllText("config", Playlist.Save());
 		}
@@ -94,8 +133,9 @@ namespace ResumePlayer
 			if (audio == null) return;
 
 			mReader = new NAudio.Wave.AudioFileReader(audio.FileName);
-			mReader.Position = audio.Position;
+			mReader.CurrentTime = new TimeSpan(audio.Position);
 			mPlayer.Init(mReader);
+			TotalPosition = mReader.TotalTime.Ticks;
 			mPlayer.Play();
 		}
 
@@ -104,8 +144,7 @@ namespace ResumePlayer
 			if (mPlayer.PlaybackState != NAudio.Wave.PlaybackState.Playing) return;
 
 			mPlayer.Pause();
-			Playlist.Pause(mReader?.Position ?? 0);
-
+			Playlist.Pause(mReader?.CurrentTime.Ticks ?? 0);
 		}
 	}
 }
